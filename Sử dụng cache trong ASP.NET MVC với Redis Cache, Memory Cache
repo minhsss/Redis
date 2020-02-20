@@ -1,0 +1,83 @@
+https://tuanitpro.com/su-dung-cache-trong-asp-net-mvc-voi-redis-cache-memory-cache/
+
+Khi lập trình ứng dụng chúng ta hay gặp vấn đề làm sao cho tối ưu tài nguyên của hệ thống, tăng tốc độ trải nghiệm từ phía end user. Đặc biệt là các ứng dụng web.
+
+Cache là gì ? 
+Lý thuyết: Cache là tên gọi của bộ nhớ đệm – nơi lưu trữ các dữ liệu nằm chờ các ứng dụng hay phần cứng xử lý. Mục đích của nó là để tăng tốc độ xử lý (có sẵn xài liền không cần tốn thời gian đi lùng sục tìm kéo về).
+
+Thực tế: Cache là các dữ liệu trong phiên làm việc trước của các ứng dụng, chương trình mà hệ điều hành lưu lại nhằm giúp việc tải data trong các phiên làm việc sau được nhanh hơn.
+
+Tip này hướng dẫn các bạn cách implement cache vào ứng dụng, sử dụng thư viện đã được wrap lại từ Memery Cache & Redis Cache
+Đầu tiên tải về thư viện tại Nuget: https://www.nuget.org/packages/colorlife.tuanitpro.com/
+
+Hoặc cài đặt trực tiếp trong Visual Studio
+
+Tạo class Customer để test
+
+public class Customer
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+}
+
+Sử dụng Memory Cache
+private static void MemoryCache_Customer_Test()
+{
+    ICacheProviderFactory cacheProvideractory = new CacheProviderFactory();
+    
+    IDataCacheProvider dataCacheProvider = cacheProvideractory.CreateFactory();
+
+    Customer customer = new Customer
+    {
+       FirstName = "Tuan",
+       LastName = "Le",
+    };
+    string cacheKey = "Memory_Cache_Customer";
+    dataCacheProvider.Set(cacheKey, customer);
+    Console.WriteLine("Before cache: " + customer.FirstName + " " + customer.LastName);
+             
+    Console.WriteLine("After Update: " + customer.FirstName + " " + customer.LastName);
+            
+    var customerInCache = dataCacheProvider.Get(cacheKey);
+    Console.WriteLine("Get Customer In MemoryCache: " + customerInCache.FirstName + " " + customerInCache.LastName);
+}
+
+
+Sử dụng Radis Cache
+Đầu tiên tải Redis cho Windows & cài đặt tại: https://github.com/MicrosoftArchive/redis/releases
+
+Code:
+
+  private static void RedisCache_Customer_Test()
+        {
+            ICacheProviderFactory cacheProvideractory = new CacheProviderFactory(new CacheProviderOptions
+            {
+                SlidingExpiration = TimeSpan.FromSeconds(30),
+                ConnectionString = "localhost:6379" // mặc định
+            }, CacheType.Redis);
+            IDataCacheProvider dataCacheProvider = cacheProvideractory.CreateFactory();
+            Customer customer = new Customer
+            {
+                FirstName = "Tuan",
+                LastName = "Le"
+            };
+            string cacheKey = "RedisCache_Customer";
+            dataCacheProvider.Set(cacheKey, customer);
+            Console.WriteLine("Before cache: " + customer.FirstName + " " + customer.LastName);
+            Thread.Sleep(5000);
+            customer.LastName = "Le_Updated";
+            Console.WriteLine("After Update: " + customer.FirstName + " " + customer.LastName);
+
+            var customerInCache = dataCacheProvider.Get(cacheKey);
+
+            Console.WriteLine("Customer In RedisCache: " + customerInCache.FirstName + " " + customerInCache.LastName);
+        }
+
+
+
+
+
+
+    
+    
+    
